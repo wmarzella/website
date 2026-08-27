@@ -15,6 +15,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Verify deploy credential is present
+        env:
+          KEY: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "::error::ACTIONS_DEPLOY_KEY is not set on this repository."
+            echo "Publishing to motis-group/motis-group.github.io is a cross-repository"
+            echo "push, so the built-in GITHUB_TOKEN cannot authorise it."
+            echo "Create the key pair and install both halves with scripts/setup-deploy-key.sh."
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -32,7 +44,7 @@ jobs:
       - name: Publish to motis-group.github.io
         uses: peaceiris/actions-gh-pages@v4
         with:
-          personal_token: ${{ secrets.MOTIS_GH_PAGES_TOKEN }}
+          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
           external_repository: motis-group/motis-group.github.io
           publish_branch: main
           publish_dir: ./_site
